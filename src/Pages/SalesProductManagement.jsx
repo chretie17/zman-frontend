@@ -13,7 +13,7 @@ import {
   DialogActions,
   Container,
 } from '@mui/material';
-import API from '../API'; // Import API instance
+import API from '../api'; // Import API instance
 
 const SalesProductManagement = () => {
   const [products, setProducts] = useState([]);

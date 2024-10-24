@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Table, TableBody, TableCell, TableHead, TableRow, Container, Typography, Checkbox, IconButton } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
-import API from '../API'; // Import API instance
+import API from '../api'; // Import API instance
 
 const AdminProductManagement = () => {
   const [products, setProducts] = useState([]);

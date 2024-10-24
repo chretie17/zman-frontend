@@ -11,7 +11,7 @@ import {
   Paper,
   TableContainer,
 } from '@mui/material';
-import API from '../API'; // Import your API instance
+import API from '../api'; // Import your API instance
 
 const SalesTransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);

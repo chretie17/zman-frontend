@@ -19,7 +19,7 @@ import {
   TextField,
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
-import API from '../API'; // Import your API instance
+import API from '../api'; // Import your API instance
 
 const AdminTransactionManagement = () => {
   const [transactions, setTransactions] = useState([]);

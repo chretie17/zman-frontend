@@ -1,6 +1,6 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, IconButton, Box } from '@mui/material';
-import { Home as HomeIcon, ShoppingCart as ProductsIcon } from '@mui/icons-material';
+import { AppBar, Toolbar, Typography, Button, IconButton } from '@mui/material';
+import { Home as HomeIcon, ShoppingCart as ProductsIcon, Login as LoginIcon } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
 const Navbar = () => {
@@ -44,6 +44,17 @@ const Navbar = () => {
           style={{ marginRight: '20px' }}
         >
           Products
+        </Button>
+
+        {/* Login Button */}
+        <Button
+          component={Link}
+          to="/login"
+          color="inherit"
+          startIcon={<LoginIcon />}
+          style={{ marginRight: '20px' }}
+        >
+          Login
         </Button>
       </Toolbar>
     </AppBar>

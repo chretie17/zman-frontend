@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button, Container, Box, Typography, Table, TableBody, TableCell, TableHead, TableRow, IconButton } from '@mui/material';
-import API from '../API'; // Import the API instance
+import API from '../api'; // Import the API instance
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 

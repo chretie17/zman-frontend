@@ -14,7 +14,7 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
-import API from '../API'; // Import API instance
+import API from '../api'; // Import API instance
 
 const PublicProducts = () => {
   const [products, setProducts] = useState([]);
@@ -79,7 +79,7 @@ const PublicProducts = () => {
 
     try {
       const apiInstance = API.getApiInstance();
-      const response = await apiInstance.post('/order', {
+      const response = await apiInstance.post('/orders', {
         customerEmail: checkoutDetails.email,
         customerPhone: checkoutDetails.phone,
         customerAddress: checkoutDetails.address,
