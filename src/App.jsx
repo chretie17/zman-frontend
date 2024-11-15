@@ -14,6 +14,7 @@ import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 import Report from './Pages/Reports';
 import GovernmentReport from './Pages/GovernmentReport';
+import AdminBeneficiaryManagement from './Pages/AdminBeneficiaries';
 
 const AppContent = () => {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ const AppContent = () => {
           <Route path="/admin/products" element={<ProductManagement />} />
           <Route path="/admin/reports" element={<Report />} />
           <Route path="/admin/govreport" element={<GovernmentReport />} />
+          <Route path="/admin/beneficiaries" element={<AdminBeneficiaryManagement />} />
         </Routes>
       </div>
     </div>

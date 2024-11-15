@@ -10,6 +10,8 @@ import {
   CircularProgress,
   Paper,
   TableContainer,
+  Tabs,
+  Tab,
   IconButton,
   Dialog,
   DialogTitle,
@@ -24,19 +26,21 @@ import API from '../api'; // Import your API instance
 const AdminTransactionManagement = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState(0); // 0 = Gov, 1 = Public
   const [openDialog, setOpenDialog] = useState(false);
   const [editTransaction, setEditTransaction] = useState(null); // For editing a transaction
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [tab]);
 
   const fetchTransactions = async () => {
     setLoading(true);
     try {
       const apiInstance = API.getApiInstance();
-      const response = await apiInstance.get('/transactions/admin/history');
+      const endpoint = tab === 0 ? '/transactions/gov' : '/transactions/public';
+      const response = await apiInstance.get(endpoint);
       setTransactions(response.data);
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -47,7 +51,7 @@ const AdminTransactionManagement = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this transaction?')) return;
-    
+
     try {
       const apiInstance = API.getApiInstance();
       await apiInstance.delete(`/transactions/${id}`);
@@ -69,7 +73,7 @@ const AdminTransactionManagement = () => {
 
   const handleSubmit = async () => {
     if (!editTransaction) return;
-    
+
     try {
       const apiInstance = API.getApiInstance();
       await apiInstance.put(`/transactions/${editTransaction.id}`, editTransaction);
@@ -80,11 +84,20 @@ const AdminTransactionManagement = () => {
     }
   };
 
+  const handleTabChange = (event, newValue) => {
+    setTab(newValue);
+  };
+
   return (
     <Container>
       <Typography variant="h4" gutterBottom>
         Admin Transaction Management
       </Typography>
+
+      <Tabs value={tab} onChange={handleTabChange}>
+        <Tab label="Government-Subsidized Transactions" />
+        <Tab label="Public Transactions" />
+      </Tabs>
 
       {loading ? (
         <CircularProgress />
@@ -94,9 +107,15 @@ const AdminTransactionManagement = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Product Name</TableCell>
-                <TableCell>Buyer Name</TableCell>
-                <TableCell>Phone Number</TableCell>
-                <TableCell>Government ID</TableCell>
+                {tab === 1 && <TableCell>Buyer Name</TableCell>}
+                {tab === 1 && <TableCell>Phone Number</TableCell>}
+                {tab === 0 && (
+                  <>
+                    <TableCell>Beneficiary Name</TableCell>
+                    <TableCell>Beneficiary National ID</TableCell>
+                    <TableCell>Beneficiary Phone</TableCell>
+                  </>
+                )}
                 <TableCell>Transaction Type</TableCell>
                 <TableCell>Price (RWF)</TableCell>
                 <TableCell>Subsidy Applied (RWF)</TableCell>
@@ -110,9 +129,15 @@ const AdminTransactionManagement = () => {
               {transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell>{transaction.product_name}</TableCell>
-                  <TableCell>{transaction.buyer_name}</TableCell>
-                  <TableCell>{transaction.phone_number}</TableCell>
-                  <TableCell>{transaction.government_id || 'N/A'}</TableCell>
+                  {tab === 1 && <TableCell>{transaction.buyer_name}</TableCell>}
+                  {tab === 1 && <TableCell>{transaction.phone_number}</TableCell>}
+                  {tab === 0 && (
+                    <>
+                      <TableCell>{transaction.beneficiary_name}</TableCell>
+                      <TableCell>{transaction.beneficiary_national_id}</TableCell>
+                      <TableCell>{transaction.beneficiary_phone}</TableCell>
+                    </>
+                  )}
                   <TableCell>{transaction.transaction_type}</TableCell>
                   <TableCell>{transaction.price}</TableCell>
                   <TableCell>{transaction.subsidy_applied}</TableCell>
@@ -140,27 +165,49 @@ const AdminTransactionManagement = () => {
         <DialogContent>
           {editTransaction && (
             <>
-              <TextField
-                label="Buyer Name"
-                value={editTransaction.buyer_name}
-                onChange={(e) => setEditTransaction({ ...editTransaction, buyer_name: e.target.value })}
-                fullWidth
-                margin="normal"
-              />
-              <TextField
-                label="Phone Number"
-                value={editTransaction.phone_number}
-                onChange={(e) => setEditTransaction({ ...editTransaction, phone_number: e.target.value })}
-                fullWidth
-                margin="normal"
-              />
-              <TextField
-                label="Government ID"
-                value={editTransaction.government_id || ''}
-                onChange={(e) => setEditTransaction({ ...editTransaction, government_id: e.target.value })}
-                fullWidth
-                margin="normal"
-              />
+              {tab === 1 && (
+                <>
+                  <TextField
+                    label="Buyer Name"
+                    value={editTransaction.buyer_name}
+                    onChange={(e) => setEditTransaction({ ...editTransaction, buyer_name: e.target.value })}
+                    fullWidth
+                    margin="normal"
+                  />
+                  <TextField
+                    label="Phone Number"
+                    value={editTransaction.phone_number}
+                    onChange={(e) => setEditTransaction({ ...editTransaction, phone_number: e.target.value })}
+                    fullWidth
+                    margin="normal"
+                  />
+                </>
+              )}
+              {tab === 0 && (
+                <>
+                  <TextField
+                    label="Beneficiary Name"
+                    value={editTransaction.beneficiary_name}
+                    onChange={(e) => setEditTransaction({ ...editTransaction, beneficiary_name: e.target.value })}
+                    fullWidth
+                    margin="normal"
+                  />
+                  <TextField
+                    label="Beneficiary National ID"
+                    value={editTransaction.beneficiary_national_id}
+                    onChange={(e) => setEditTransaction({ ...editTransaction, beneficiary_national_id: e.target.value })}
+                    fullWidth
+                    margin="normal"
+                  />
+                  <TextField
+                    label="Beneficiary Phone"
+                    value={editTransaction.beneficiary_phone}
+                    onChange={(e) => setEditTransaction({ ...editTransaction, beneficiary_phone: e.target.value })}
+                    fullWidth
+                    margin="normal"
+                  />
+                </>
+              )}
               <TextField
                 label="Transaction Type"
                 value={editTransaction.transaction_type}

@@ -12,23 +12,29 @@ import {
   DialogContent,
   DialogActions,
   Container,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
 } from '@mui/material';
-import API from '../api'; // Import API instance
+import API from '../api';
 
 const SalesProductManagement = () => {
   const [products, setProducts] = useState([]);
+  const [beneficiaries, setBeneficiaries] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(0);
+  const [selectedBeneficiary, setSelectedBeneficiary] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [govId, setGovId] = useState('');
-  const [salesType, setSalesType] = useState(''); // 'public' or 'government'
+  const [salesType, setSalesType] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); // For loading states
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchProducts();
+    fetchBeneficiaries();
   }, []);
 
   const fetchProducts = async () => {
@@ -41,12 +47,43 @@ const SalesProductManagement = () => {
     }
   };
 
+  const fetchBeneficiaries = async () => {
+    try {
+      const apiInstance = API.getApiInstance();
+      const response = await apiInstance.get('/beneficiaries/active');
+      setBeneficiaries(response.data);
+    } catch (error) {
+      console.error('Error fetching beneficiaries:', error);
+    }
+  };
+
+  const calculateGovernmentSubsidy = () => {
+    if (selectedProduct && salesType === 'government') {
+      const totalCost = selectedProduct.price * quantity;
+      const subsidyAmount = (totalCost * selectedProduct.subsidy_percentage) / 100;
+      const beneficiaryPays = totalCost - subsidyAmount;
+
+      return {
+        totalCost,
+        subsidyAmount,
+        beneficiaryPays,
+      };
+    }
+    return null;
+  };
+
   const handleSalesSubmit = async () => {
     setError('');
-    setLoading(true); // Enable loading state
+    setLoading(true);
   
-    if (!selectedProduct || quantity <= 0 || !customerName || !customerPhone || (salesType === 'government' && !govId)) {
-      setError('Please fill out all fields');
+    if (!selectedProduct || quantity <= 0) {
+      setError('Please fill out all required fields');
+      setLoading(false);
+      return;
+    }
+  
+    if (quantity > selectedProduct.stock) {
+      setError('Insufficient stock available');
       setLoading(false);
       return;
     }
@@ -56,37 +93,62 @@ const SalesProductManagement = () => {
       const transactionData = {
         productId: selectedProduct.id,
         quantity,
-        buyerName: customerName,
-        phoneNumber: customerPhone,
-        govId: salesType === 'government' ? govId : null, // For government sales only
-        saleType: salesType,
       };
   
       if (salesType === 'government') {
+        if (!selectedBeneficiary) {
+          setError('Please select a beneficiary for government sales');
+          setLoading(false);
+          return;
+        }
+  
+        const beneficiaryDetails = beneficiaries.find((b) => b.id === selectedBeneficiary);
+        if (!beneficiaryDetails) {
+          setError('Selected beneficiary not found');
+          setLoading(false);
+          return;
+        }
+  
+        transactionData.beneficiaryDetails = {
+          name: beneficiaryDetails.name,
+          national_id: beneficiaryDetails.national_id,
+          phone: beneficiaryDetails.phone_number,
+        };
+  
         await apiInstance.post('/transactions/govSale', transactionData);
       } else {
+        if (!customerName || !customerPhone) {
+          setError('Please provide customer details for public sales');
+          setLoading(false);
+          return;
+        }
+  
+        transactionData.customerName = customerName;
+        transactionData.customerPhone = customerPhone;
+  
         await apiInstance.post('/transactions/publicSale', transactionData);
       }
   
+      // Reset form and state after submission
       setSelectedProduct(null);
       setQuantity(0);
+      setSelectedBeneficiary('');
       setCustomerName('');
       setCustomerPhone('');
-      setGovId('');
-      setSalesType(''); // Reset sales type
+      setSalesType('');
       setOpenDialog(false);
-      fetchProducts();
+      fetchProducts(); // Refresh product stock
     } catch (error) {
       setError('Error processing sale. Please try again.');
       console.error('Error processing sale:', error);
     } finally {
-      setLoading(false); // Disable loading state
+      setLoading(false);
     }
   };
   
   const handleOpenDialog = (product, type) => {
     setSelectedProduct(product);
-    setSalesType(type); // Set the sales type
+    setSalesType(type);
     setOpenDialog(true);
   };
 
@@ -94,9 +156,9 @@ const SalesProductManagement = () => {
     setOpenDialog(false);
     setSelectedProduct(null);
     setQuantity(0);
+    setSelectedBeneficiary('');
     setCustomerName('');
     setCustomerPhone('');
-    setGovId('');
     setSalesType('');
   };
 
@@ -187,38 +249,55 @@ const SalesProductManagement = () => {
                 required
                 margin="normal"
               />
-              <TextField
-                label="Customer Name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                fullWidth
-                required
-                margin="normal"
-              />
-              <TextField
-                label="Customer Phone"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                fullWidth
-                required
-                margin="normal"
-              />
-              {salesType === 'government' && (
-                <TextField
-                  label="Government ID"
-                  value={govId}
-                  onChange={(e) => setGovId(e.target.value)}
-                  fullWidth
-                  required
-                  margin="normal"
-                />
-              )}
 
-              {/* Show the government discount if it's a subsidized sale */}
-              {salesType === 'government' && (
-                <Typography variant="body2" gutterBottom>
-                  Government Pays: {(selectedProduct.price * selectedProduct.subsidy_percentage) / 100} RWF
-                </Typography>
+              {salesType === 'government' ? (
+                <>
+                  <FormControl fullWidth margin="normal" required>
+                    <InputLabel>Select Beneficiary</InputLabel>
+                    <Select
+                      value={selectedBeneficiary}
+                      onChange={(e) => setSelectedBeneficiary(e.target.value)}
+                    >
+                      {beneficiaries.map((beneficiary) => (
+                        <MenuItem key={beneficiary.id} value={beneficiary.id}>
+                          {beneficiary.name} - {beneficiary.national_id}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {quantity > 0 && calculateGovernmentSubsidy() && (
+                    <>
+                      <Typography variant="body2" gutterBottom>
+                        Total Cost: {calculateGovernmentSubsidy().totalCost} RWF
+                      </Typography>
+                      <Typography variant="body2" gutterBottom>
+                        Government Pays: {calculateGovernmentSubsidy().subsidyAmount} RWF
+                      </Typography>
+                      <Typography variant="body2" gutterBottom>
+                        Beneficiary Pays: {calculateGovernmentSubsidy().beneficiaryPays} RWF
+                      </Typography>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <TextField
+                    label="Customer Name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    fullWidth
+                    required
+                    margin="normal"
+                  />
+                  <TextField
+                    label="Customer Phone"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    fullWidth
+                    required
+                    margin="normal"
+                  />
+                </>
               )}
             </>
           )}

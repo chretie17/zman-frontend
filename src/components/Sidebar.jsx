@@ -219,6 +219,7 @@ const Sidebar = ({ handleLogout }) => {
     { text: 'Manage Products', path: '/admin/products', icon: FaBoxes },
     { text: 'Manage Transactions', path: '/admin/transactions', icon: FaChartLine },
     { text: 'Manage Orders', path: '/admin/orders', icon: FaJediOrder },
+    { text: 'Manage Beneficiaries', path: '/admin/beneficiaries', icon: FaJediOrder },
     { text: 'Reports', path: '/admin/reports', icon: FaReceipt },
     { text: 'Reports Gov', path: '/admin/govreport', icon: FaReceipt },
   ];

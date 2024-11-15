@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Container, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import {
+  Button,
+  Container,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+  CircularProgress,
+} from '@mui/material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { jsPDF } from 'jspdf';
@@ -9,78 +19,96 @@ import API from '../api';
 const GovernmentReport = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [reportData, setReportData] = useState(null);
+  const [reportData, setReportData] = useState({
+    totalSubsidyGiven: 0,
+    totalSubsidizedRevenue: 0,
+    recipients: [],
+    subsidizedInventory: [],
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch the government report on page load
   useEffect(() => {
     fetchGovernmentReport();
   }, []);
 
-  // Fetch overall government report
   const fetchGovernmentReport = async () => {
+    setLoading(true);
     try {
       const apiInstance = API.getApiInstance();
       const response = await apiInstance.get('/reports/generateGovernment');
-      setReportData(response.data.report);
+      setReportData(response.data.report || {
+        totalSubsidyGiven: 0,
+        totalSubsidizedRevenue: 0,
+        recipients: [],
+        subsidizedInventory: [],
+      });
       setError('');
     } catch (err) {
       setError('Error fetching government report.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fetch custom report based on the date range
   const fetchCustomReport = async () => {
     if (!startDate || !endDate) {
       setError('Please select both start and end dates.');
       return;
     }
 
+    setLoading(true);
     const start = startDate.toISOString().split('T')[0];
     const end = endDate.toISOString().split('T')[0];
 
     try {
       const apiInstance = API.getApiInstance();
       const response = await apiInstance.get(`/reports/generateGovernment?startDate=${start}&endDate=${end}`);
-      setReportData(response.data.report);
+      setReportData(response.data.report || {
+        totalSubsidyGiven: 0,
+        totalSubsidizedRevenue: 0,
+        recipients: [],
+        subsidizedInventory: [],
+      });
       setError('');
     } catch (err) {
       setError('Error fetching custom government report.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Generate PDF for the government report
   const handlePDFDownload = () => {
     if (!reportData) return;
 
     const doc = new jsPDF();
     doc.text('Government Subsidy Report', 10, 10);
-    doc.text(`Total Subsidy Given: ${reportData.total_subsidy_given} RWF`, 10, 20);
-    doc.text(`Total Subsidized Revenue: ${reportData.total_subsidized_revenue} RWF`, 10, 30);
+    doc.text(`Total Subsidy Given: ${reportData.totalSubsidyGiven} RWF`, 10, 20);
+    doc.text(`Total Subsidized Revenue: ${reportData.totalSubsidizedRevenue} RWF`, 10, 30);
 
-    const recipientTable = reportData.recipients.map(item => [
-      item.buyer_name || 'N/A',
-      item.phone_number || 'N/A',
-      item.product_name,
-      item.subsidy_applied,
-      item.final_price
+    const recipientTable = reportData.recipients.map((item) => [
+      item.buyerName || 'N/A',
+      item.phoneNumber || 'N/A',
+      item.productName,
+      item.subsidyApplied,
+      item.finalPrice,
     ]);
 
     doc.autoTable({
-      head: [['Buyer Name', 'Phone Number', 'Product', 'Subsidy Applied', 'Final Price']],
-      body: recipientTable
+      head: [['Beneficiary Name', 'Phone Number', 'Product', 'Subsidy Applied', 'Final Price']],
+      body: recipientTable,
     });
 
-    const inventoryTable = reportData.subsidized_inventory.map(item => [
-      item.id,
-      item.name,
-      item.remaining_stock
+    const inventoryTable = reportData.subsidizedInventory.map((item) => [
+      item.productId,
+      item.productName,
+      item.remainingStock,
     ]);
 
     doc.autoTable({
       head: [['Product ID', 'Product Name', 'Remaining Stock']],
       body: inventoryTable,
-      startY: doc.autoTable.previous.finalY + 10
+      startY: doc.autoTable.previous.finalY + 10,
     });
 
     doc.save('government_report.pdf');
@@ -92,11 +120,11 @@ const GovernmentReport = () => {
         Government Subsidy Report
       </Typography>
 
-      {/* Display Error */}
-      {error && <Typography color="error">{error}</Typography>}
-
-      {/* Display Report */}
-      {reportData && (
+      {loading ? (
+        <CircularProgress />
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : (
         <>
           <Typography variant="h6" style={{ marginTop: '20px' }}>
             Report Overview
@@ -110,8 +138,8 @@ const GovernmentReport = () => {
             </TableHead>
             <TableBody>
               <TableRow>
-                <TableCell>{reportData.total_subsidy_given} RWF</TableCell>
-                <TableCell>{reportData.total_subsidized_revenue} RWF</TableCell>
+                <TableCell>{reportData.totalSubsidyGiven} RWF</TableCell>
+                <TableCell>{reportData.totalSubsidizedRevenue} RWF</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -122,7 +150,7 @@ const GovernmentReport = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Buyer Name</TableCell>
+                <TableCell>Beneficiary Name</TableCell>
                 <TableCell>Phone Number</TableCell>
                 <TableCell>Product</TableCell>
                 <TableCell>Subsidy Applied</TableCell>
@@ -132,11 +160,11 @@ const GovernmentReport = () => {
             <TableBody>
               {reportData.recipients.map((recipient, index) => (
                 <TableRow key={index}>
-                  <TableCell>{recipient.buyer_name || 'N/A'}</TableCell>
-                  <TableCell>{recipient.phone_number || 'N/A'}</TableCell>
-                  <TableCell>{recipient.product_name}</TableCell>
-                  <TableCell>{recipient.subsidy_applied} RWF</TableCell>
-                  <TableCell>{recipient.final_price} RWF</TableCell>
+                  <TableCell>{recipient.buyerName || 'N/A'}</TableCell>
+                  <TableCell>{recipient.phoneNumber || 'N/A'}</TableCell>
+                  <TableCell>{recipient.productName}</TableCell>
+                  <TableCell>{recipient.subsidyApplied} RWF</TableCell>
+                  <TableCell>{recipient.finalPrice} RWF</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -154,11 +182,11 @@ const GovernmentReport = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {reportData.subsidized_inventory.map((product, index) => (
+              {reportData.subsidizedInventory.map((product, index) => (
                 <TableRow key={index}>
-                  <TableCell>{product.id}</TableCell>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.remaining_stock}</TableCell>
+                  <TableCell>{product.productId}</TableCell>
+                  <TableCell>{product.productName}</TableCell>
+                  <TableCell>{product.remainingStock}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -172,7 +200,6 @@ const GovernmentReport = () => {
         </>
       )}
 
-      {/* Date Range Picker */}
       <div style={{ marginTop: '40px', marginBottom: '20px' }}>
         <Typography variant="h6">Generate Custom Report (Date Range):</Typography>
         <DatePicker
