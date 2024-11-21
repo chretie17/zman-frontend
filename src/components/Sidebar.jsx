@@ -235,7 +235,7 @@ const Sidebar = ({ handleLogout }) => {
   return (
     <SidebarContainer>
       <LogoSection>
-        <h1><FaLeaf /> AgriTech</h1>
+        <h1><FaLeaf /> AgriSupply</h1>
         <p>{currentTime}</p>
       </LogoSection>
 

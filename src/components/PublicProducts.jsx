@@ -14,7 +14,7 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
-import API from '../api'; // Import API instance
+import API from '../api';
 
 const PublicProducts = () => {
   const [products, setProducts] = useState([]);
@@ -102,109 +102,158 @@ const PublicProducts = () => {
   };
 
   return (
-    <div>
-      <Typography variant="h4" gutterBottom>
-        Products
+    <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
+      <Typography 
+        variant="h4" 
+        className="text-3xl font-light text-[#1F4B38] mb-8 text-center tracking-wide"
+      >
+        Our Products
       </Typography>
 
-      <Grid container spacing={3}>
+      <Grid 
+        container 
+        spacing={3} 
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
         {products.map((product) => (
-          <Grid item xs={12} sm={6} md={4} key={product.id}>
-            <Card>
+          <Grid item key={product.id}>
+            <Card 
+              className="h-full flex flex-col border-none shadow-md rounded-lg overflow-hidden 
+                         transition-all duration-300 hover:shadow-xl group"
+            >
               <CardMedia
                 component="img"
-                height="200"
+                className="h-48 w-full object-cover group-hover:scale-105 transition-transform"
                 image={`data:image/jpeg;base64,${product.image}`}
                 alt={product.name}
               />
-              <CardContent>
-                <Typography variant="h6">{product.name}</Typography>
-                <Typography variant="body2" color="textSecondary">
+              <CardContent className="flex-grow flex flex-col p-4">
+                <Typography 
+                  variant="h6" 
+                  className="text-lg font-semibold text-[#1F4B38] mb-2 truncate"
+                >
+                  {product.name}
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  className="text-gray-600 mb-3 flex-grow text-sm line-clamp-2"
+                >
                   {product.description}
                 </Typography>
-                <Typography variant="body2">
-                  <strong>Price:</strong> {product.price} RWF
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  style={{ marginTop: '10px' }}
-                  onClick={() => addToCart(product)}
-                >
-                  Add to Cart
-                </Button>
+                <div className="flex justify-between items-center mt-auto">
+                  <Typography 
+                    variant="body2"
+                    className="text-[#1F4B38] font-bold"
+                  >
+                    {product.price} RWF
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    className="bg-[#1F4B38] hover:bg-[#2C6E54] text-white text-xs px-3 py-2 rounded-full"
+                    onClick={() => addToCart(product)}
+                  >
+                    Add to Cart
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
 
-      <Button
-        variant="contained"
-        color="secondary"
-        fullWidth
-        style={{ marginTop: '20px' }}
-        onClick={handleOpenCheckout}
-        disabled={cart.length === 0}
-      >
-        Checkout
-      </Button>
+      {cart.length > 0 && (
+        <Button
+          variant="contained"
+          className="fixed bottom-4 left-1/2 transform -translate-x-1/2 
+                     bg-[#1F4B38] hover:bg-[#2C6E54] text-white py-3 px-8 rounded-full shadow-lg"
+          onClick={handleOpenCheckout}
+        >
+          Proceed to Checkout
+        </Button>
+      )}
 
-      {/* Checkout Dialog */}
-      <Dialog open={isCheckoutOpen} onClose={handleCloseCheckout}>
-        <DialogTitle>Checkout</DialogTitle>
+      <Dialog 
+        open={isCheckoutOpen} 
+        onClose={handleCloseCheckout}
+        PaperProps={{
+          className: "rounded-lg max-w-md"
+        }}
+      >
+        <DialogTitle className="text-xl font-semibold text-[#1F4B38] text-center">
+          Checkout
+        </DialogTitle>
         <DialogContent>
-          <Typography variant="h6">Cart Items</Typography>
+          <Typography variant="subtitle1" className="text-gray-700 mb-4">
+            Cart Items
+          </Typography>
           {cart.map((item) => (
-            <Typography key={item.id} variant="body2">
+            <div 
+              key={item.id} 
+              className="flex justify-between text-sm text-gray-600 mb-2"
+            >
               {item.name} - {item.quantity} x {item.price} RWF
-            </Typography>
+            </div>
           ))}
 
           <TextField
             label="Email"
             fullWidth
+            variant="outlined"
             value={checkoutDetails.email}
             onChange={(e) => setCheckoutDetails({ ...checkoutDetails, email: e.target.value })}
             margin="normal"
             required
+            className="mb-2"
           />
           <TextField
             label="Phone"
             fullWidth
+            variant="outlined"
             value={checkoutDetails.phone}
             onChange={(e) => setCheckoutDetails({ ...checkoutDetails, phone: e.target.value })}
             margin="normal"
             required
+            className="mb-2"
           />
           <TextField
             label="Address"
             fullWidth
+            variant="outlined"
             value={checkoutDetails.address}
             onChange={(e) => setCheckoutDetails({ ...checkoutDetails, address: e.target.value })}
             margin="normal"
             required
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseCheckout} color="secondary">
+        <DialogActions className="px-6 pb-4">
+          <Button 
+            onClick={handleCloseCheckout} 
+            className="text-gray-600 hover:bg-gray-100"
+          >
             Cancel
           </Button>
-          <Button onClick={handleCheckoutSubmit} variant="contained" color="primary" disabled={loading}>
+          <Button 
+            onClick={handleCheckoutSubmit} 
+            variant="contained"
+            disabled={loading}
+            className="bg-[#1F4B38] hover:bg-[#2C6E54] text-white"
+          >
             {loading ? 'Processing...' : 'Place Order'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for feedback */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity}>
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity}
+          className="rounded-lg"
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>

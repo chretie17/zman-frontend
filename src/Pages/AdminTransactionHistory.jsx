@@ -21,14 +21,53 @@ import {
   TextField,
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
-import API from '../api'; // Import your API instance
+import { styled } from '@mui/system';
+import API from '../api';
+
+const CustomContainer = styled(Container)({
+  backgroundColor: '#f9f9f9',
+  padding: '2rem',
+  borderRadius: '10px',
+  boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.1)',
+  marginTop: '2rem',
+});
+
+const CustomButton = styled(Button)({
+  backgroundColor: '#1F4B38',
+  color: '#fff',
+  '&:hover': {
+    backgroundColor: '#2C6E54',
+  },
+  borderRadius: '25px',
+  padding: '0.5rem 2rem',
+  boxShadow: '0px 4px 12px rgba(31, 75, 56, 0.4)',
+  transition: 'all 0.3s ease-in-out',
+});
+
+const CustomDialog = styled(Dialog)({
+  '& .MuiPaper-root': {
+    padding: '1rem',
+    borderRadius: '15px',
+  },
+});
+
+const CustomTabs = styled(Tabs)({
+  marginBottom: '1rem',
+  '& .MuiTab-root': {
+    color: '#1F4B38',
+    fontWeight: 'bold',
+    '&.Mui-selected': {
+      color: '#2C6E54',
+    },
+  },
+});
 
 const AdminTransactionManagement = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState(0); // 0 = Gov, 1 = Public
+  const [tab, setTab] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editTransaction, setEditTransaction] = useState(null); // For editing a transaction
+  const [editTransaction, setEditTransaction] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -89,20 +128,22 @@ const AdminTransactionManagement = () => {
   };
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>
+    <CustomContainer>
+      <Typography variant="h4" gutterBottom className="text-[#1F4B38] font-bold text-center mb-8">
         Admin Transaction Management
       </Typography>
 
-      <Tabs value={tab} onChange={handleTabChange}>
+      <CustomTabs value={tab} onChange={handleTabChange} centered>
         <Tab label="Government-Subsidized Transactions" />
         <Tab label="Public Transactions" />
-      </Tabs>
+      </CustomTabs>
 
       {loading ? (
-        <CircularProgress />
+        <div className="flex justify-center items-center">
+          <CircularProgress />
+        </div>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={3} className="p-4">
           <Table>
             <TableHead>
               <TableRow>
@@ -127,7 +168,7 @@ const AdminTransactionManagement = () => {
             </TableHead>
             <TableBody>
               {transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
+                <TableRow key={transaction.id} hover>
                   <TableCell>{transaction.product_name}</TableCell>
                   {tab === 1 && <TableCell>{transaction.buyer_name}</TableCell>}
                   {tab === 1 && <TableCell>{transaction.phone_number}</TableCell>}
@@ -159,9 +200,8 @@ const AdminTransactionManagement = () => {
         </TableContainer>
       )}
 
-      {/* Edit Transaction Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Edit Transaction</DialogTitle>
+      <CustomDialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
+        <DialogTitle className="text-[#1F4B38] font-bold">Edit Transaction</DialogTitle>
         <DialogContent>
           {editTransaction && (
             <>
@@ -253,12 +293,12 @@ const AdminTransactionManagement = () => {
           <Button onClick={handleCloseDialog} color="secondary">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} color="primary" variant="contained">
+          <CustomButton onClick={handleSubmit} variant="contained">
             Save
-          </Button>
+          </CustomButton>
         </DialogActions>
-      </Dialog>
-    </Container>
+      </CustomDialog>
+    </CustomContainer>
   );
 };
 

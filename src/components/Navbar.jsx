@@ -20,7 +20,7 @@ const Navbar = () => {
             letterSpacing: '2px',
           }}
         >
-          AgriStore
+          INGABO PLANT HEALTH
         </Typography>
 
         {/* Home Button */}

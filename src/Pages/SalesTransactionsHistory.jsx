@@ -1,18 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Container,
-  CircularProgress,
-  Paper,
-  TableContainer,
-  Tabs,
-  Tab,
-} from '@mui/material';
+import { Loader2 } from "lucide-react";
 import API from '../api';
 
 const TransactionHistory = () => {
@@ -43,67 +30,147 @@ const TransactionHistory = () => {
   };
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6 text-[#1E4B38]">
         Transaction History
-      </Typography>
+      </h1>
 
-      <Tabs value={tab} onChange={handleTabChange}>
-        <Tab label="Government-Subsidized Sales" />
-        <Tab label="Public Sales" />
-      </Tabs>
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <div className="flex -mb-px">
+            <button
+              className={`py-2 px-4 text-sm font-medium mr-4 focus:outline-none ${
+                tab === 0
+                  ? 'border-b-2 border-[#1E4B38] text-[#1E4B38]'
+                  : 'text-gray-500 hover:text-[#1E4B38]'
+              }`}
+              onClick={() => handleTabChange(null, 0)}
+            >
+              Government-Subsidized Sales
+            </button>
+            <button
+              className={`py-2 px-4 text-sm font-medium focus:outline-none ${
+                tab === 1
+                  ? 'border-b-2 border-[#1E4B38] text-[#1E4B38]'
+                  : 'text-gray-500 hover:text-[#1E4B38]'
+              }`}
+              onClick={() => handleTabChange(null, 1)}
+            >
+              Public Sales
+            </button>
+          </div>
+        </div>
+      </div>
 
       {loading ? (
-        <CircularProgress />
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-[#1E4B38]" />
+        </div>
       ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Product Name</TableCell>
-                {tab === 1 && <TableCell>Buyer Name</TableCell>}
-                {tab === 1 && <TableCell>Phone Number</TableCell>}
-                {tab === 0 && (
+        <div className="overflow-x-auto bg-white rounded-lg shadow">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-[#1E4B38]">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Product Name
+                </th>
+                {tab === 1 && (
                   <>
-                    <TableCell>Beneficiary Name</TableCell>
-                    <TableCell>Beneficiary National ID</TableCell>
-                    <TableCell>Beneficiary Phone</TableCell>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Buyer Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Phone Number
+                    </th>
                   </>
                 )}
-                <TableCell>Transaction Type</TableCell>
-                <TableCell>Price (RWF)</TableCell>
-                <TableCell>Subsidy Applied (RWF)</TableCell>
-                <TableCell>Final Price (RWF)</TableCell>
-                <TableCell>Transaction Date</TableCell>
-                <TableCell>Payment Method</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+                {tab === 0 && (
+                  <>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Beneficiary Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Beneficiary National ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Beneficiary Phone
+                    </th>
+                  </>
+                )}
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Transaction Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Price (RWF)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Subsidy Applied (RWF)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Final Price (RWF)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Transaction Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Payment Method
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
               {transactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>{transaction.product_name}</TableCell>
-                  {tab === 1 && <TableCell>{transaction.buyer_name}</TableCell>}
-                  {tab === 1 && <TableCell>{transaction.phone_number}</TableCell>}
-                  {tab === 0 && (
+                <tr key={transaction.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {transaction.product_name}
+                  </td>
+                  {tab === 1 && (
                     <>
-                      <TableCell>{transaction.beneficiary_name}</TableCell>
-                      <TableCell>{transaction.beneficiary_national_id}</TableCell>
-                      <TableCell>{transaction.beneficiary_phone}</TableCell>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {transaction.buyer_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {transaction.phone_number}
+                      </td>
                     </>
                   )}
-                  <TableCell>{transaction.transaction_type}</TableCell>
-                  <TableCell>{transaction.price}</TableCell>
-                  <TableCell>{transaction.subsidy_applied}</TableCell>
-                  <TableCell>{transaction.final_price}</TableCell>
-                  <TableCell>{new Date(transaction.transaction_date).toLocaleString()}</TableCell>
-                  <TableCell>{transaction.payment_method}</TableCell>
-                </TableRow>
+                  {tab === 0 && (
+                    <>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {transaction.beneficiary_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {transaction.beneficiary_national_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {transaction.beneficiary_phone}
+                      </td>
+                    </>
+                  )}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {transaction.transaction_type}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {transaction.price}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {transaction.subsidy_applied}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {transaction.final_price}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {new Date(transaction.transaction_date).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {transaction.payment_method}
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+            </tbody>
+          </table>
+        </div>
       )}
-    </Container>
+    </div>
   );
 };
 
