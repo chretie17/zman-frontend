@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Container, Box, Typography, Table, TableBody, TableCell, TableHead, TableRow, IconButton } from '@mui/material';
-import API from '../api'; // Import the API instance
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import API from '../api';
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -10,19 +7,18 @@ const ManageUsers = () => {
     username: '',
     email: '',
     password: '',
-    role: 'public', // Default role is 'public'
+    role: 'public',
   });
   const [editUserId, setEditUserId] = useState(null);
   const [error, setError] = useState('');
 
-  // Fetch users from the backend
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
     try {
-      const apiInstance = API.getApiInstance(); // Get the API instance
+      const apiInstance = API.getApiInstance();
       const response = await apiInstance.get('/users');
       setUsers(response.data);
     } catch (error) {
@@ -30,12 +26,10 @@ const ManageUsers = () => {
     }
   };
 
-  // Handle input change
   const handleInputChange = (e) => {
     setNewUser({ ...newUser, [e.target.name]: e.target.value });
   };
 
-  // Create or update user
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -43,14 +37,11 @@ const ManageUsers = () => {
       const apiInstance = API.getApiInstance();
 
       if (editUserId) {
-        // Update user
         await apiInstance.put(`/users/update/${editUserId}`, newUser);
       } else {
-        // Create new user
         await apiInstance.post('/users/create', newUser);
       }
 
-      // Clear form and fetch users again
       setNewUser({ username: '', email: '', password: '', role: 'public' });
       setEditUserId(null);
       fetchUsers();
@@ -59,110 +50,130 @@ const ManageUsers = () => {
     }
   };
 
-  // Handle user deletion
   const handleDelete = async (id) => {
     try {
       const apiInstance = API.getApiInstance();
       await apiInstance.delete(`/users/delete/${id}`);
-      fetchUsers(); // Fetch users after deletion
+      fetchUsers();
     } catch (error) {
       setError('Error deleting user');
     }
   };
 
-  // Handle user editing
   const handleEdit = (user) => {
     setNewUser({ username: user.username, email: user.email, password: '', role: user.role });
     setEditUserId(user.id);
   };
 
   return (
-    <Container maxWidth="md">
-      <Box my={4}>
-        <Typography variant="h4" gutterBottom>
-          Manage Users
-        </Typography>
-        {error && <Typography color="error">{error}</Typography>}
+    <div className="bg-gradient-to-br from-#1F4B38 to-[#2a6b52] min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden">
+        <div className="bg-[#1F4B38] text-white p-6">
+          <h2 className="text-2xl font-bold text-center">User Management</h2>
+        </div>
+        
+        <div className="p-8">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
 
-        {/* User form for creating or editing */}
-        <form onSubmit={handleSubmit}>
-          <TextField
-            label="Username"
-            name="username"
-            value={newUser.username}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <TextField
-            label="Email"
-            name="email"
-            value={newUser.email}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <TextField
-            label="Password"
-            name="password"
-            value={newUser.password}
-            onChange={handleInputChange}
-            type="password"
-            fullWidth
-            margin="normal"
-            required={editUserId === null} // Only required for creating new users
-          />
-          <TextField
-            label="Role"
-            name="role"
-            value={newUser.role}
-            onChange={handleInputChange}
-            fullWidth
-            margin="normal"
-            required
-          />
-          <Button variant="contained" color="primary" type="submit">
-            {editUserId ? 'Update User' : 'Create User'}
-          </Button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                name="username"
+                value={newUser.username}
+                onChange={handleInputChange}
+                placeholder="Username"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1F4B38]"
+                required
+              />
+              <input
+                name="email"
+                type="email"
+                value={newUser.email}
+                onChange={handleInputChange}
+                placeholder="Email"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1F4B38]"
+                required
+              />
+            </div>
+            <input
+              name="password"
+              type="password"
+              value={newUser.password}
+              onChange={handleInputChange}
+              placeholder="Password"
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1F4B38]"
+              required={editUserId === null}
+            />
+            <select
+              name="role"
+              value={newUser.role}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1F4B38]"
+              required
+            >
+              <option value="public">Public</option>
+              <option value="admin">Admin</option>
+              <option value="moderator">Moderator</option>
+            </select>
+            
+            <button
+              type="submit"
+              className="w-full bg-[#1F4B38] text-white py-2 rounded-lg hover:bg-opacity-90 transition duration-300"
+            >
+              {editUserId ? 'Update User' : 'Create User'}
+            </button>
+          </form>
 
-        {/* Users table */}
-        <Box my={4}>
-          <Typography variant="h5" gutterBottom>
-            Users List
-          </Typography>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Username</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleEdit(user)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(user.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Box>
-      </Box>
-    </Container>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-3 text-left">Username</th>
+                  <th className="p-3 text-left">Email</th>
+                  <th className="p-3 text-left">Role</th>
+                  <th className="p-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3">{user.username}</td>
+                    <td className="p-3">{user.email}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold 
+                        ${user.role === 'admin' ? 'bg-red-100 text-red-800' : 
+                          user.role === 'moderator' ? 'bg-yellow-100 text-yellow-800' : 
+                          'bg-green-100 text-green-800'}`}
+                      >
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <button 
+                        onClick={() => handleEdit(user)}
+                        className="text-blue-600 hover:text-blue-800 mr-2"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(user.id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

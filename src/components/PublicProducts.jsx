@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  CardMedia,
-  Typography,
-  Grid,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Snackbar,
-  Alert,
+import { 
+  Card as MUICard, 
+  CardContent as MUICardContent, 
+  CardMedia as MUICardMedia 
 } from '@mui/material';
 import API from '../api';
 
@@ -102,161 +92,136 @@ const PublicProducts = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
-      <Typography 
-        variant="h4" 
-        className="text-3xl font-light text-[#1F4B38] mb-8 text-center tracking-wide"
-      >
-        Our Products
-      </Typography>
+    <div className="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-center text-emerald-900 mb-12 tracking-tight drop-shadow-md">
+          Discover Our Products
+        </h1>
 
-      <Grid 
-        container 
-        spacing={3} 
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-      >
-        {products.map((product) => (
-          <Grid item key={product.id}>
-            <Card 
-              className="h-full flex flex-col border-none shadow-md rounded-lg overflow-hidden 
-                         transition-all duration-300 hover:shadow-xl group"
-            >
-              <CardMedia
-                component="img"
-                className="h-48 w-full object-cover group-hover:scale-105 transition-transform"
-                image={`data:image/jpeg;base64,${product.image}`}
-                alt={product.name}
-              />
-              <CardContent className="flex-grow flex flex-col p-4">
-                <Typography 
-                  variant="h6" 
-                  className="text-lg font-semibold text-[#1F4B38] mb-2 truncate"
-                >
-                  {product.name}
-                </Typography>
-                <Typography 
-                  variant="body2" 
-                  className="text-gray-600 mb-3 flex-grow text-sm line-clamp-2"
-                >
-                  {product.description}
-                </Typography>
-                <div className="flex justify-between items-center mt-auto">
-                  <Typography 
-                    variant="body2"
-                    className="text-[#1F4B38] font-bold"
-                  >
-                    {product.price} RWF
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    className="bg-[#1F4B38] hover:bg-[#2C6E54] text-white text-xs px-3 py-2 rounded-full"
-                    onClick={() => addToCart(product)}
-                  >
-                    Add to Cart
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {cart.length > 0 && (
-        <Button
-          variant="contained"
-          className="fixed bottom-4 left-1/2 transform -translate-x-1/2 
-                     bg-[#1F4B38] hover:bg-[#2C6E54] text-white py-3 px-8 rounded-full shadow-lg"
-          onClick={handleOpenCheckout}
-        >
-          Proceed to Checkout
-        </Button>
-      )}
-
-      <Dialog 
-        open={isCheckoutOpen} 
-        onClose={handleCloseCheckout}
-        PaperProps={{
-          className: "rounded-lg max-w-md"
-        }}
-      >
-        <DialogTitle className="text-xl font-semibold text-[#1F4B38] text-center">
-          Checkout
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="subtitle1" className="text-gray-700 mb-4">
-            Cart Items
-          </Typography>
-          {cart.map((item) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
             <div 
-              key={item.id} 
-              className="flex justify-between text-sm text-gray-600 mb-2"
+              key={product.id} 
+              className="transform transition-all duration-300 hover:-translate-y-2 hover:scale-105"
             >
-              {item.name} - {item.quantity} x {item.price} RWF
+              <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden">
+                <div className="relative h-56 overflow-hidden">
+                  <img 
+                    src={`data:image/jpeg;base64,${product.image}`} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="text-xl font-semibold text-emerald-900 mb-2 truncate">
+                    {product.name}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 h-12 line-clamp-2">
+                    {product.description}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-800 font-bold text-lg">
+                      {product.price} RWF
+                    </span>
+                    <button 
+                      onClick={() => addToCart(product)}
+                      className="bg-emerald-900 text-white px-4 py-2 rounded-full hover:bg-emerald-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
+        </div>
 
-          <TextField
-            label="Email"
-            fullWidth
-            variant="outlined"
-            value={checkoutDetails.email}
-            onChange={(e) => setCheckoutDetails({ ...checkoutDetails, email: e.target.value })}
-            margin="normal"
-            required
-            className="mb-2"
-          />
-          <TextField
-            label="Phone"
-            fullWidth
-            variant="outlined"
-            value={checkoutDetails.phone}
-            onChange={(e) => setCheckoutDetails({ ...checkoutDetails, phone: e.target.value })}
-            margin="normal"
-            required
-            className="mb-2"
-          />
-          <TextField
-            label="Address"
-            fullWidth
-            variant="outlined"
-            value={checkoutDetails.address}
-            onChange={(e) => setCheckoutDetails({ ...checkoutDetails, address: e.target.value })}
-            margin="normal"
-            required
-          />
-        </DialogContent>
-        <DialogActions className="px-6 pb-4">
-          <Button 
-            onClick={handleCloseCheckout} 
-            className="text-gray-600 hover:bg-gray-100"
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleCheckoutSubmit} 
-            variant="contained"
-            disabled={loading}
-            className="bg-[#1F4B38] hover:bg-[#2C6E54] text-white"
-          >
-            {loading ? 'Processing...' : 'Place Order'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        {cart.length > 0 && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+            <button 
+              onClick={handleOpenCheckout}
+              className="bg-emerald-900 text-white px-8 py-3 rounded-full shadow-xl hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-500"
+            >
+              Proceed to Checkout
+            </button>
+          </div>
+        )}
 
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={() => setSnackbarOpen(false)} 
-          severity={snackbarSeverity}
-          className="rounded-lg"
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+        {isCheckoutOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-6">
+              <h2 className="text-2xl font-bold text-center text-emerald-900">Checkout</h2>
+              
+              <div className="space-y-4">
+                {cart.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="flex justify-between text-sm text-gray-600 border-b pb-2"
+                  >
+                    {item.name} - {item.quantity} x {item.price} RWF
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                <input 
+                  type="email" 
+                  placeholder="Email" 
+                  value={checkoutDetails.email}
+                  onChange={(e) => setCheckoutDetails({ ...checkoutDetails, email: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required 
+                />
+                <input 
+                  type="tel" 
+                  placeholder="Phone" 
+                  value={checkoutDetails.phone}
+                  onChange={(e) => setCheckoutDetails({ ...checkoutDetails, phone: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required 
+                />
+                <input 
+                  type="text" 
+                  placeholder="Address" 
+                  value={checkoutDetails.address}
+                  onChange={(e) => setCheckoutDetails({ ...checkoutDetails, address: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  required 
+                />
+              </div>
+
+              <div className="flex justify-between space-x-4">
+                <button 
+                  onClick={handleCloseCheckout}
+                  className="w-full text-gray-600 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleCheckoutSubmit}
+                  disabled={loading}
+                  className="w-full bg-emerald-900 text-white py-2 rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                >
+                  {loading ? 'Processing...' : 'Place Order'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {snackbarOpen && (
+          <div 
+            className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[200] 
+              ${snackbarSeverity === 'success' 
+                ? 'bg-green-500 text-white' 
+                : 'bg-red-500 text-white'} 
+              px-6 py-3 rounded-full shadow-xl animate-bounce`}
+            onAnimationEnd={() => setSnackbarOpen(false)}
+          >
+            {snackbarMessage}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
