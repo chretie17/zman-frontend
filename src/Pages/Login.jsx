@@ -8,6 +8,7 @@ import {
   LeafIcon 
 } from 'lucide-react';
 import API from '../api';
+import background from '../assets/ingabo.jpg';
 
 const Login = () => {
   const [credentials, setCredentials] = useState({ identifier: '', password: '' });
@@ -18,7 +19,7 @@ const Login = () => {
 
   const handleInputChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
-    setError(''); // Clear error when user starts typing
+    setError('');
   };
 
   const handleClickShowPassword = () => {
@@ -39,7 +40,6 @@ const Login = () => {
         localStorage.setItem('userRole', response.data.role);
         localStorage.setItem('token', response.data.token);
 
-        // Animate before navigation
         await new Promise(resolve => setTimeout(resolve, 500));
 
         if (response.data.role === 'admin' || response.data.role === 'sales') {
@@ -58,134 +58,157 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-900 to-emerald-700 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
-        <div 
-          className="bg-white shadow-2xl rounded-2xl overflow-hidden 
-                     transform transition-all duration-300 hover:scale-[1.02]"
-        >
-          <div className="p-8">
-            {/* Logo Section */}
-            <div className="flex flex-col items-center mb-8">
-              <LeafIcon 
-                className="w-16 h-16 text-emerald-800 mb-4 
-                           animate-pulse transform rotate-6"
+    <div className="h-screen w-screen overflow-hidden relative flex">
+      {/* Left Panel - Login Form */}
+      <div className="w-full md:w-2/5 h-full relative z-10 flex items-center justify-center 
+                    bg-emerald-950/95 backdrop-blur-md">
+        <div className="w-full max-w-md px-8 py-12 relative">
+          {/* Logo Section */}
+          <div className="flex flex-col items-center mb-12">
+            <div className="relative mb-4">
+              <div className="absolute -inset-2 rounded-full bg-emerald-400/30 blur-xl animate-pulse"></div>
+              <LeafIcon className="relative w-20 h-20 text-emerald-400 transform rotate-6" />
+            </div>
+            <h1 className="text-4xl font-bold text-emerald-50 mb-4 text-center">
+              INGABO PLANT HEALTH
+            </h1>
+            <div className="h-1 w-24 bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full mb-4"></div>
+            <p className="text-emerald-200 text-center text-lg">
+              Welcome back! Please sign in to continue
+            </p>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-8 p-4 bg-red-500/20 border border-red-400 
+                           rounded-xl text-red-100 text-center animate-shake">
+              {error}
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <UserIcon className="w-5 h-5 text-emerald-300" />
+              </div>
+              <input 
+                type="text"
+                name="identifier"
+                placeholder="Username or Email"
+                value={credentials.identifier}
+                onChange={handleInputChange}
+                required
+                className="w-full pl-12 pr-4 py-4 bg-emerald-900/50
+                         border-2 border-emerald-800 rounded-xl 
+                         text-emerald-100 placeholder-emerald-400
+                         focus:ring-2 focus:ring-emerald-400/50 
+                         focus:border-emerald-700
+                         transition duration-300
+                         hover:border-emerald-700"
               />
-              <h1 className="text-3xl font-bold text-emerald-900 mb-2">
-                INGABO PLANT HEALTH
-              </h1>
-              <p className="text-gray-600 text-center">
-                Welcome back! Please sign in to continue
-              </p>
             </div>
 
-            {/* Error Message */}
-            {error && (
-              <div 
-                className="bg-red-50 border border-red-200 text-red-700 
-                           px-4 py-3 rounded-lg mb-6 text-center 
-                           animate-shake"
-              >
-                {error}
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <LockIcon className="w-5 h-5 text-emerald-300" />
               </div>
-            )}
-
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username Input */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserIcon className="w-5 h-5 text-emerald-600" />
-                </div>
-                <input 
-                  type="text"
-                  name="identifier"
-                  placeholder="Username or Email"
-                  value={credentials.identifier}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border 
-                             border-emerald-300 rounded-lg 
-                             focus:ring-2 focus:ring-emerald-500 
-                             focus:border-transparent 
-                             transition duration-300"
-                />
-              </div>
-
-              {/* Password Input */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockIcon className="w-5 h-5 text-emerald-600" />
-                </div>
-                <input 
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  placeholder="Password"
-                  value={credentials.password}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full pl-10 pr-12 py-3 border 
-                             border-emerald-300 rounded-lg 
-                             focus:ring-2 focus:ring-emerald-500 
-                             focus:border-transparent 
-                             transition duration-300"
-                />
-                <button
-                  type="button"
-                  onClick={handleClickShowPassword}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center 
-                             text-emerald-600 hover:text-emerald-800 
-                             transition duration-300"
-                >
-                  {showPassword ? (
-                    <EyeOffIcon className="w-5 h-5" />
-                  ) : (
-                    <EyeIcon className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-
-              {/* Submit Button */}
+              <input 
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                placeholder="Password"
+                value={credentials.password}
+                onChange={handleInputChange}
+                required
+                className="w-full pl-12 pr-12 py-4 bg-emerald-900/50
+                         border-2 border-emerald-800 rounded-xl 
+                         text-emerald-100 placeholder-emerald-400
+                         focus:ring-2 focus:ring-emerald-400/50 
+                         focus:border-emerald-700
+                         transition duration-300
+                         hover:border-emerald-700"
+              />
               <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-emerald-900 text-white py-3 rounded-lg 
-                           hover:bg-emerald-800 transition duration-300 
-                           transform active:scale-[0.98] 
-                           disabled:opacity-50 flex items-center 
-                           justify-center space-x-2"
+                type="button"
+                onClick={handleClickShowPassword}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center 
+                         text-emerald-300 hover:text-emerald-200 
+                         transition duration-300"
               >
-                {isLoading ? (
-                  <>
-                    <svg 
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      fill="none" 
-                      viewBox="0 0 24 24"
-                    >
-                      <circle 
-                        className="opacity-25" 
-                        cx="12" 
-                        cy="12" 
-                        r="10" 
-                        stroke="currentColor" 
-                        strokeWidth="4"
-                      ></circle>
-                      <path 
-                        className="opacity-75" 
-                        fill="currentColor" 
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    <span>Signing in...</span>
-                  </>
+                {showPassword ? (
+                  <EyeOffIcon className="w-5 h-5" />
                 ) : (
-                  <span>Sign In</span>
+                  <EyeIcon className="w-5 h-5" />
                 )}
               </button>
-            </form>
-          </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-400 
+                       text-white py-4 rounded-xl
+                       hover:from-emerald-400 hover:to-emerald-300 
+                       transition duration-300 
+                       transform hover:scale-[1.02] active:scale-[0.98]
+                       disabled:opacity-50 
+                       flex items-center justify-center space-x-2
+                       shadow-lg shadow-emerald-900/50 
+                       hover:shadow-xl hover:shadow-emerald-900/50
+                       font-semibold text-lg"
+            >
+              {isLoading ? (
+                <>
+                  <svg 
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24"
+                  >
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      strokeWidth="4"
+                    ></circle>
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <span>Sign In</span>
+              )}
+            </button>
+          </form>
         </div>
+      </div>
+
+      {/* Right Panel - Background Image */}
+      <div className="hidden md:block md:w-3/5 h-full relative">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ 
+            backgroundImage: `url(${background})`,
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/90 to-transparent"></div>
+        </div>
+      </div>
+
+      {/* Mobile Background */}
+      <div 
+        className="absolute inset-0 -z-10 bg-cover bg-center bg-no-repeat md:hidden"
+        style={{ 
+          backgroundImage: `url(${background})`,
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/95 to-emerald-900/95"></div>
       </div>
     </div>
   );

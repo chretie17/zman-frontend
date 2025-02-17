@@ -1,38 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Table, TableBody, TableCell, TableHead, TableRow, Container, Typography, Checkbox, IconButton, Paper } from '@mui/material';
-import { Delete, Edit } from '@mui/icons-material';
-import { styled } from '@mui/system';
+import { PlusCircle, X, Pencil, Trash2 } from 'lucide-react';
 import API from '../api';
-
-const CustomContainer = styled(Container)({
-  backgroundColor: '#f9f9f9',
-  padding: '2rem',
-  borderRadius: '10px',
-  boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.1)',
-  marginTop: '2rem',
-});
-
-const CustomButton = styled(Button)({
-  backgroundColor: '#1F4B38',
-  color: '#fff',
-  '&:hover': {
-    backgroundColor: '#2C6E54',
-  },
-  borderRadius: '25px',
-  padding: '0.5rem 2rem',
-  boxShadow: '0px 4px 12px rgba(31, 75, 56, 0.4)',
-  transition: 'all 0.3s ease-in-out',
-});
-
-const CustomTextField = styled(TextField)({
-  marginBottom: '1rem',
-  '& .MuiInputBase-root': {
-    borderRadius: '8px',
-  },
-});
 
 const AdminProductManagement = () => {
   const [products, setProducts] = useState([]);
+  const [showForm, setShowForm] = useState(false);
   const [productData, setProductData] = useState({
     name: '',
     description: '',
@@ -79,12 +51,9 @@ const AdminProductManagement = () => {
 
     try {
       const formData = new FormData();
-      formData.append('name', productData.name);
-      formData.append('description', productData.description);
-      formData.append('price', productData.price);
-      formData.append('stock', productData.stock);
-      formData.append('is_subsidized', productData.is_subsidized);
-      formData.append('subsidy_percentage', productData.subsidy_percentage);
+      Object.keys(productData).forEach(key => {
+        formData.append(key, productData[key]);
+      });
 
       if (imageFile) {
         formData.append('image', imageFile);
@@ -94,21 +63,25 @@ const AdminProductManagement = () => {
 
       if (editProductId) {
         await apiInstance.put(`/products/update/${editProductId}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       } else {
         await apiInstance.post('/products/add', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
       }
 
-      setProductData({ name: '', description: '', price: '', stock: '', is_subsidized: false, subsidy_percentage: 0 });
+      setProductData({
+        name: '',
+        description: '',
+        price: '',
+        stock: '',
+        is_subsidized: false,
+        subsidy_percentage: 0,
+      });
       setImageFile(null);
       setEditProductId(null);
+      setShowForm(false);
       fetchProducts();
     } catch (error) {
       setError('Error saving product. Please try again.');
@@ -126,6 +99,7 @@ const AdminProductManagement = () => {
       subsidy_percentage: product.subsidy_percentage,
     });
     setEditProductId(product.id);
+    setShowForm(true);
   };
 
   const handleDelete = async (id) => {
@@ -139,137 +113,186 @@ const AdminProductManagement = () => {
   };
 
   return (
-    <CustomContainer>
-      <Typography variant="h4" gutterBottom className="text-[#1F4B38] font-bold text-center mb-8">
-        Admin: Manage Products
-      </Typography>
-
-      {error && (
-        <Typography color="error" gutterBottom>
-          {error}
-        </Typography>
-      )}
-
-      <form onSubmit={handleSubmit} encType="multipart/form-data" className="mb-8">
-        <CustomTextField
-          label="Name"
-          name="name"
-          value={productData.name}
-          onChange={handleInputChange}
-          fullWidth
-          required
-        />
-        <CustomTextField
-          label="Description"
-          name="description"
-          value={productData.description}
-          onChange={handleInputChange}
-          fullWidth
-          required
-        />
-        <CustomTextField
-          label="Price"
-          name="price"
-          type="number"
-          value={productData.price}
-          onChange={handleInputChange}
-          fullWidth
-          required
-        />
-        <CustomTextField
-          label="Stock"
-          name="stock"
-          type="number"
-          value={productData.stock}
-          onChange={handleInputChange}
-          fullWidth
-          required
-        />
-
-        <div className="flex items-center mb-4">
-          <Checkbox
-            checked={productData.is_subsidized}
-            onChange={handleCheckboxChange}
-            name="is_subsidized"
-            color="primary"
-          />
-          <Typography component="label" className="text-[#1F4B38] font-medium">
-            Is Subsidized
-          </Typography>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+          >
+            {showForm ? <X className="mr-2" /> : <PlusCircle className="mr-2" />}
+            {showForm ? 'Close Form' : 'Add Product'}
+          </button>
         </div>
 
-        {productData.is_subsidized && (
-          <CustomTextField
-            label="Subsidy Percentage"
-            name="subsidy_percentage"
-            type="number"
-            value={productData.subsidy_percentage}
-            onChange={handleInputChange}
-            fullWidth
-            required
-          />
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+            {error}
+          </div>
         )}
 
-        <input
-          type="file"
-          name="image"
-          onChange={handleImageChange}
-          accept="image/*"
-          style={{ marginBottom: '1rem' }}
-        />
+        {showForm && (
+          <div className="mb-8 p-6 bg-white rounded-xl shadow-lg">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={productData.name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <input
+                    type="text"
+                    name="description"
+                    value={productData.description}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price (RWF)</label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={productData.price}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                  <input
+                    type="number"
+                    name="stock"
+                    value={productData.stock}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                  />
+                </div>
+              </div>
 
-        <CustomButton type="submit">
-          {editProductId ? 'Update Product' : 'Add Product'}
-        </CustomButton>
-      </form>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="is_subsidized"
+                  checked={productData.is_subsidized}
+                  onChange={handleCheckboxChange}
+                  className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                />
+                <label className="text-sm font-medium text-gray-700">Is Subsidized</label>
+              </div>
 
-      <Paper elevation={3} className="p-4">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Price</TableCell>
-              <TableCell>Stock</TableCell>
-              <TableCell>Subsidized</TableCell>
-              <TableCell>Subsidy Percentage</TableCell>
-              <TableCell>Image</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id} hover>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{product.description}</TableCell>
-                <TableCell>{product.price} RWF</TableCell>
-                <TableCell>{product.stock}</TableCell>
-                <TableCell>{product.is_subsidized ? 'Yes' : 'No'}</TableCell>
-                <TableCell>{product.subsidy_percentage ? `${product.subsidy_percentage}%` : 'N/A'}</TableCell>
-                <TableCell>
-                  {product.image && (
-                    <img
-                      src={`data:image/jpeg;base64,${product.image}`}
-                      alt={product.name}
-                      width="100"
-                      className="rounded-lg shadow-sm"
-                    />
-                  )}
-                </TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleEdit(product)} color="primary">
-                    <Edit />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(product.id)} color="secondary">
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
-    </CustomContainer>
+              {productData.is_subsidized && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subsidy Percentage</label>
+                  <input
+                    type="number"
+                    name="subsidy_percentage"
+                    value={productData.subsidy_percentage}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                <input
+                  type="file"
+                  name="image"
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full md:w-auto px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                {editProductId ? 'Update Product' : 'Add Product'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subsidized</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subsidy %</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {products.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{product.description}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{product.price} RWF</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{product.stock}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        product.is_subsidized ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {product.is_subsidized ? 'Yes' : 'No'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {product.subsidy_percentage ? `${product.subsidy_percentage}%` : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {product.image && (
+                        <img
+                          src={`data:image/jpeg;base64,${product.image}`}
+                          alt={product.name}
+                          className="h-12 w-12 rounded-lg object-cover"
+                        />
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="p-1 text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          <Pencil className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
