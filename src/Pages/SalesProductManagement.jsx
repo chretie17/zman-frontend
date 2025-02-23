@@ -18,6 +18,9 @@ import {
   FormControl,
 } from '@mui/material';
 import API from '../api';
+import { ListSubheader, InputAdornment } from '@mui/material';
+import { Search } from 'lucide-react';
+
 
 const SalesProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -25,6 +28,7 @@ const SalesProductManagement = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(0);
   const [selectedBeneficiary, setSelectedBeneficiary] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [salesType, setSalesType] = useState('');
@@ -112,6 +116,7 @@ const SalesProductManagement = () => {
         transactionData.beneficiaryDetails = {
           name: beneficiaryDetails.name,
           national_id: beneficiaryDetails.national_id,
+          needs: beneficiaryDetails.needs,
           phone: beneficiaryDetails.phone_number,
         };
   
@@ -256,90 +261,175 @@ const SalesProductManagement = () => {
           <DialogTitle className="bg-emerald-900 text-white font-bold">
             Process {salesType === 'government' ? 'Government-Subsidized' : 'Public'} Sale
           </DialogTitle>
-          <DialogContent className="space-y-4 p-6">
-            {selectedProduct && (
-              <div className="space-y-4">
-                <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
-                  <Typography variant="h6" className="text-emerald-900 font-bold mb-2">
-                    {selectedProduct.name}
-                  </Typography>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-gray-600">Price:</span>
-                      <p className="font-semibold text-emerald-900">{selectedProduct.price} RWF</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Stock:</span>
-                      <p className="font-semibold text-emerald-900">{selectedProduct.stock} units</p>
-                    </div>
-                  </div>
-                </div>
+          <DialogContent className="p-6">
+ {selectedProduct && (
+   <div className="space-y-6">
+     {/* Product Card */}
+     <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl overflow-hidden border border-emerald-200">
+       <div className="p-6">
+         <h3 className="text-lg font-semibold text-emerald-900 mb-4">
+           {selectedProduct.name}
+         </h3>
+         <div className="grid grid-cols-2 gap-4">
+           <div className="bg-white/80 rounded-lg p-3">
+             <span className="text-sm text-gray-500">Price</span>
+             <p className="text-emerald-900 font-medium mt-1">{selectedProduct.price} RWF</p>
+           </div>
+           <div className="bg-white/80 rounded-lg p-3">
+             <span className="text-sm text-gray-500">Stock</span>
+             <p className="text-emerald-900 font-medium mt-1">{selectedProduct.stock} units</p>
+           </div>
+         </div>
+       </div>
+     </div>
 
-                <TextField
-                  label="Quantity"
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                  fullWidth
-                  required
-                  variant="outlined"
-                  className="bg-white"
-                />
+     <TextField
+       label="Quantity"
+       type="number"
+       value={quantity}
+       onChange={(e) => setQuantity(Number(e.target.value))}
+       fullWidth
+       required
+       variant="outlined"
+       className="bg-white"
+     />
 
-                {salesType === 'government' ? (
-                  <>
-                    <FormControl fullWidth required variant="outlined">
-                      <InputLabel>Select Beneficiary</InputLabel>
-                      <Select
-                        value={selectedBeneficiary}
-                        onChange={(e) => setSelectedBeneficiary(e.target.value)}
-                      >
-                        {beneficiaries.map((beneficiary) => (
-                          <MenuItem key={beneficiary.id} value={beneficiary.id}>
-                            {beneficiary.name} - {beneficiary.national_id}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    {quantity > 0 && calculateGovernmentSubsidy() && (
-                      <div className="bg-emerald-100 p-4 rounded-lg border border-emerald-300 space-y-2">
-                        <Typography className="text-emerald-900">
-                          Total Cost: {calculateGovernmentSubsidy().totalCost} RWF
-                        </Typography>
-                        <Typography className="text-emerald-700">
-                          Government Pays: {calculateGovernmentSubsidy().subsidyAmount} RWF
-                        </Typography>
-                        <Typography className="text-emerald-900 font-bold">
-                          Beneficiary Pays: {calculateGovernmentSubsidy().beneficiaryPays} RWF
-                        </Typography>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="space-y-4">
-                    <TextField
-                      label="Customer Name"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      fullWidth
-                      required
-                      variant="outlined"
-                      className="bg-white"
-                    />
-                    <TextField
-                      label="Customer Phone"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      fullWidth
-                      required
-                      variant="outlined"
-                      className="bg-white"
-                    />
-                  </div>
-                )}
+     {salesType === 'government' ? (
+       <>
+      <FormControl fullWidth required variant="outlined">
+  <InputLabel>Select Beneficiary</InputLabel>
+  <Select
+    value={selectedBeneficiary}
+    onChange={(e) => setSelectedBeneficiary(e.target.value)}
+    className="bg-white"
+    MenuProps={{
+      PaperProps: {
+        className: "max-h-[400px]",
+        style: { marginTop: '8px' }
+      }
+    }}
+    onOpen={() => {
+      // Reset search when opening dropdown
+      setSearchTerm('');
+    }}
+  >
+    <ListSubheader className="sticky top-0 bg-white px-3 py-2 z-10">
+      <TextField
+        size="small"
+        placeholder="Search beneficiaries..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        variant="outlined"
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <Search className="h-5 w-5 text-gray-400" />
+            </InputAdornment>
+          ),
+        }}
+        fullWidth
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      />
+    </ListSubheader>
+
+    {beneficiaries
+      .filter(b => 
+        b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.national_id.includes(searchTerm) ||
+        b.phone_number.includes(searchTerm) ||
+        (b.needs || '').toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .map((beneficiary) => (
+        <MenuItem 
+          key={beneficiary.id} 
+          value={beneficiary.id}
+          className="hover:bg-emerald-50 border-b border-gray-100 last:border-0"
+        >
+          <div className="py-2 px-1 w-full">
+            <div className="flex items-center justify-between">
+              <span className="font-medium text-gray-900">
+                {beneficiary.name}
+              </span>
+              <span className="text-sm text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                ID: {beneficiary.national_id}
+              </span>
+            </div>
+            <div className="mt-2 space-y-1">
+              <div className="flex items-center text-sm text-gray-500">
+                <span className="font-medium mr-2">Phone:</span>
+                <span>{beneficiary.phone_number}</span>
               </div>
-            )}
-          </DialogContent>
+              <div className="flex items-start text-sm text-gray-500">
+                <span className="font-medium mr-2">Needs:</span>
+                <span className="italic">{beneficiary.needs || 'None specified'}</span>
+              </div>
+            </div>
+          </div>
+        </MenuItem>
+      ))}
+
+    {beneficiaries.filter(b => 
+      b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.national_id.includes(searchTerm) ||
+      b.phone_number.includes(searchTerm) ||
+      (b.needs || '').toLowerCase().includes(searchTerm.toLowerCase())
+    ).length === 0 && (
+      <MenuItem disabled>
+        <div className="text-center py-4 text-gray-500">
+          No beneficiaries found
+        </div>
+      </MenuItem>
+    )}
+  </Select>
+</FormControl>
+         {quantity > 0 && calculateGovernmentSubsidy() && (
+           <div className="bg-emerald-50 rounded-xl border border-emerald-200 overflow-hidden">
+             <div className="border-b border-emerald-200 px-4 py-2">
+               <span className="text-sm font-medium text-emerald-800">Cost Breakdown</span>
+             </div>
+             <div className="p-4 space-y-2">
+               <div className="flex justify-between">
+                 <span className="text-gray-600">Total Cost:</span>
+                 <span className="font-medium">{calculateGovernmentSubsidy().totalCost} RWF</span>
+               </div>
+               <div className="flex justify-between">
+                 <span className="text-gray-600">Government Pays:</span>
+                 <span className="font-medium text-emerald-700">{calculateGovernmentSubsidy().subsidyAmount} RWF</span>
+               </div>
+               <div className="flex justify-between pt-2 border-t border-emerald-200">
+                 <span className="font-medium">Beneficiary Pays:</span>
+                 <span className="font-bold text-emerald-900">{calculateGovernmentSubsidy().beneficiaryPays} RWF</span>
+               </div>
+             </div>
+           </div>
+         )}
+       </>
+     ) : (
+       <div className="space-y-4">
+         <TextField
+           label="Customer Name"
+           value={customerName}
+           onChange={(e) => setCustomerName(e.target.value)}
+           fullWidth
+           required
+           variant="outlined"
+           className="bg-white"
+         />
+         <TextField
+           label="Customer Phone"
+           value={customerPhone}
+           onChange={(e) => setCustomerPhone(e.target.value)}
+           fullWidth
+           required
+           variant="outlined"
+           className="bg-white"
+         />
+       </div>
+     )}
+   </div>
+ )}
+</DialogContent>
           <DialogActions className="p-4 bg-gray-50">
             <Button 
               onClick={handleCloseDialog}

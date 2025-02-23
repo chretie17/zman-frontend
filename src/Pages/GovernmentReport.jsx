@@ -92,27 +92,17 @@ const GovernmentReport = () => {
   const handlePDFDownload = async () => {
     if (!reportData) return;
   
-    // Create PDF document in landscape orientation
+    // Create PDF document in portrait orientation for a more document-like feel
     const doc = new jsPDF({
-      orientation: 'landscape',
+      orientation: 'portrait',
       unit: 'mm',
       format: 'a4'
     });
   
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 15;
+    const margin = 20;
     const contentWidth = pageWidth - (2 * margin);
-  
-    // Add background header
-    doc.setFillColor(30, 75, 56); // #1E4B38
-    doc.rect(0, 0, pageWidth, 45, 'F');
-  
-    // Add decorative accent lines
-    doc.setFillColor(255, 255, 255);
-    doc.rect(0, 43, pageWidth, 0.5, 'F');
-    doc.setFillColor(234, 238, 236); // Lighter accent
-    doc.rect(0, 43.5, pageWidth, 0.5, 'F');
   
     // Add logo
     try {
@@ -121,124 +111,96 @@ const GovernmentReport = () => {
       await new Promise((resolve) => {
         img.onload = resolve;
       });
-      doc.addImage(img, 'PNG', margin, 10, 25, 25);
+      doc.addImage(img, 'PNG', margin, margin, 25, 25);
     } catch (error) {
       console.error('Error loading logo:', error);
     }
   
-    // Add header text
-    doc.setTextColor(255, 255, 255);
+    // Document Header
+    let yPos = margin;
+    
+    // Title and Date
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(24);
-    doc.text('Government Subsidy Report', margin + 35, 25);
-  
-    // Add date range and generation info
+    doc.setFontSize(20);
+    doc.setTextColor(30, 75, 56);
+    doc.text('Government Subsidy Report', margin + 35, yPos + 15);
+    
+    // Add date range
     doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
     if (activeDateRange) {
       doc.text(
-        `Report Period: ${format(new Date(activeDateRange.start), 'MMMM d, yyyy')} - ${format(new Date(activeDateRange.end), 'MMMM d, yyyy')}`,
+        `Report Period: ${format(new Date(activeDateRange.start), 'MMMM d, yyyy')} to ${format(new Date(activeDateRange.end), 'MMMM d, yyyy')}`,
         margin + 35,
-        33
+        yPos + 22
       );
     }
-    doc.setFontSize(9);
-    doc.text(`Generated: ${format(new Date(), 'MMMM d, yyyy HH:mm')}`, pageWidth - margin - 45, 33);
+    
+    // Add generation date
+    doc.text(`Generated on: ${format(new Date(), 'MMMM d, yyyy')}`, margin + 35, yPos + 29);
   
-    let yPos = 60;
+    // Add decorative line
+    yPos += 45;
+    doc.setDrawColor(30, 75, 56);
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
   
-    // Function to create a stylish summary box
-    const createSummaryBox = (x, width, title, value, options = {}) => {
-      const boxHeight = 45;
-      
-      // Main box
-      doc.setFillColor(248, 250, 249);
-      doc.roundedRect(x, yPos, width, boxHeight, 3, 3, 'F');
-      
-      // Top accent border
-      doc.setFillColor(30, 75, 56);
-      doc.rect(x + 1, yPos, width - 2, 2, 'F');
-      
-      // Subtle border
-      doc.setDrawColor(30, 75, 56);
-      doc.setLineWidth(0.1);
-      doc.roundedRect(x, yPos, width, boxHeight, 3, 3, 'S');
+    // Executive Summary
+    yPos += 15;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(30, 75, 56);
+    doc.text('Executive Summary', margin, yPos);
   
-      // Title with decorative element
-      doc.setFillColor(30, 75, 56);
-      doc.circle(x + 8, yPos + 12, 1, 'F');
-      
-      doc.setFontSize(11);
-      doc.setTextColor(102, 102, 102);
-      doc.setFont('helvetica', 'normal');
-      doc.text(title, x + 15, yPos + 15);
+    yPos += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
+    
+    const summaryText = [
+      `This report provides a comprehensive overview of the government subsidy program's performance.`,
+      `Total subsidy disbursement amounts to ${Number(reportData.totalSubsidyGiven).toLocaleString()} RWF,`,
+      `generating a total subsidized revenue of ${Number(reportData.totalSubsidizedRevenue).toLocaleString()} RWF.`,
+      `The program has served ${reportData.recipients.length} beneficiaries and currently maintains`,
+      `${reportData.subsidizedInventory.length} products in the subsidized inventory.`
+    ].join(' ');
   
-      // Value with enhanced styling
-      const formattedValue = Number(value).toLocaleString();
-      doc.setFontSize(18);
-      doc.setTextColor(30, 75, 56);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`${formattedValue} RWF`, x + 15, yPos + 35);
+    const splitSummary = doc.splitTextToSize(summaryText, contentWidth);
+    doc.text(splitSummary, margin, yPos);
+    yPos += splitSummary.length * 7;
   
-      // Add change indicator if available
-      if (options.change) {
-        const changeX = x + width - 45;
-        const isPositive = options.change > 0;
-        const changeColor = isPositive ? '#137333' : '#c5221f';
-        
-        // Background for change indicator
-        doc.setFillColor(isPositive ? '#e6f4ea' : '#fce8e6');
-        doc.roundedRect(changeX - 5, yPos + 20, 40, 15, 2, 2, 'F');
-        
-        // Change text
-        doc.setTextColor(changeColor);
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        const changeText = `${isPositive ? '↑' : '↓'} ${Math.abs(options.change)}%`;
-        doc.text(changeText, changeX, yPos + 30);
-      }
-    };
+    // Financial Overview Section
+    yPos += 15;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(30, 75, 56);
+    doc.text('Financial Overview', margin, yPos);
   
-    // Create summary boxes with equal width
-    const boxWidth = (contentWidth - 20) / 2;
-    createSummaryBox(margin, boxWidth, 'Total Subsidy Given', reportData.totalSubsidyGiven, {
-      change: 12.5 // Example change value
-    });
-    createSummaryBox(margin + boxWidth + 20, boxWidth, 'Total Subsidized Revenue', reportData.totalSubsidizedRevenue, {
-      change: 8.3 // Example change value
-    });
+    yPos += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(60, 60, 60);
   
-    yPos += 60;
+    // Create two-column layout for financial data
+    const col1X = margin;
+    const col2X = margin + contentWidth/2;
+    
+    doc.text('Total Subsidy Given:', col1X, yPos);
+    doc.text(`${Number(reportData.totalSubsidyGiven).toLocaleString()} RWF`, col1X + 45, yPos);
+    
+    doc.text('Total Subsidized Revenue:', col2X, yPos);
+    doc.text(`${Number(reportData.totalSubsidizedRevenue).toLocaleString()} RWF`, col2X + 50, yPos);
   
-    // Function to add section title
-    const addSectionTitle = (title, subtitle = '') => {
-      // Background accent
-      doc.setFillColor(248, 250, 249);
-      doc.rect(margin, yPos - 2, contentWidth, 12, 'F');
-      
-      // Left accent bar
-      doc.setFillColor(30, 75, 56);
-      doc.rect(margin, yPos, 4, 8, 'F');
-      
-      // Title text
-      doc.setTextColor(30, 75, 56);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text(title, margin + 10, yPos + 7);
-      
-      // Subtitle (if provided)
-      if (subtitle) {
-        doc.setTextColor(128, 128, 128);
-        doc.setFontSize(10);
-        doc.text(subtitle, margin + 10 + doc.getTextWidth(title) + 10, yPos + 7);
-      }
-      
-      return yPos + 15;
-    };
+    // Beneficiary Details Section
+    yPos += 20;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(30, 75, 56);
+    doc.text('Beneficiary Details', margin, yPos);
   
-    // Beneficiaries Section
-    yPos = addSectionTitle('Beneficiary Details', `${reportData.recipients.length} records found`);
-  
-    // Enhanced table styling for beneficiaries
+    yPos += 10;
+    // Beneficiaries table with refined styling
     doc.autoTable({
       startY: yPos,
       head: [['Beneficiary Name', 'Phone Number', 'Product', 'Subsidy (RWF)', 'Price (RWF)', 'Date']],
@@ -248,52 +210,31 @@ const GovernmentReport = () => {
         item.productName,
         Number(item.subsidyApplied).toLocaleString(),
         Number(item.finalPrice).toLocaleString(),
-        format(new Date(item.transactionDate), 'MMM dd, yyyy HH:mm')
+        format(new Date(item.transactionDate), 'MMM dd, yyyy')
       ]),
       styles: {
         font: 'helvetica',
         fontSize: 9,
-        cellPadding: { top: 5, right: 5, bottom: 5, left: 5 },
-        lineWidth: 0.1,
+        cellPadding: 5,
       },
       headStyles: {
-        fillColor: [30, 75, 56],
-        textColor: [255, 255, 255],
-        fontSize: 10,
+        fillColor: [240, 240, 240],
+        textColor: [30, 75, 56],
         fontStyle: 'bold',
-        halign: 'left',
-        cellPadding: { top: 6, right: 5, bottom: 6, left: 5 },
-      },
-      columnStyles: {
-        0: { cellWidth: 45 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 30, halign: 'right' },
-        4: { cellWidth: 30, halign: 'right' },
-        5: { cellWidth: 35 }
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 249]
       },
       margin: { left: margin, right: margin },
       tableWidth: contentWidth,
-      didDrawPage: (data) => {
-        // Add header to each new page
-        if (data.pageCount > 1) {
-          doc.setFillColor(30, 75, 56);
-          doc.rect(0, 0, pageWidth, 20, 'F');
-          doc.setTextColor(255, 255, 255);
-          doc.setFontSize(12);
-          doc.text('Government Subsidy Report - Continued', margin, 13);
-        }
-      }
     });
   
     // Inventory Section
     yPos = doc.autoTable.previous.finalY + 20;
-    yPos = addSectionTitle('Subsidized Product Inventory', `${reportData.subsidizedInventory.length} products`);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(30, 75, 56);
+    doc.text('Subsidized Product Inventory', margin, yPos);
   
-    // Enhanced table styling for inventory
+    yPos += 10;
+    // Inventory table with consistent styling
     doc.autoTable({
       startY: yPos,
       head: [['Product ID', 'Product Name', 'Remaining Stock']],
@@ -305,27 +246,15 @@ const GovernmentReport = () => {
       styles: {
         font: 'helvetica',
         fontSize: 9,
-        cellPadding: { top: 5, right: 5, bottom: 5, left: 5 },
-        lineWidth: 0.1,
+        cellPadding: 5,
       },
       headStyles: {
-        fillColor: [30, 75, 56],
-        textColor: [255, 255, 255],
-        fontSize: 10,
+        fillColor: [240, 240, 240],
+        textColor: [30, 75, 56],
         fontStyle: 'bold',
-        halign: 'left',
-        cellPadding: { top: 6, right: 5, bottom: 6, left: 5 },
-      },
-      columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 70 },
-        2: { cellWidth: 35, halign: 'right' }
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 249]
       },
       margin: { left: margin, right: margin },
-      tableWidth: contentWidth
+      tableWidth: contentWidth,
     });
   
     // Add footer to all pages
@@ -334,18 +263,16 @@ const GovernmentReport = () => {
       doc.setPage(i);
       
       // Footer line
-      doc.setDrawColor(30, 75, 56);
+      doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.5);
       doc.line(margin, pageHeight - 20, pageWidth - margin, pageHeight - 20);
       
       // Footer text
       doc.setFontSize(8);
       doc.setTextColor(128, 128, 128);
+      doc.text('Agricultural Management System', margin, pageHeight - 10);
       
-      // Company info on left
-      doc.text('© 2025 Agricultural Management System', margin, pageHeight - 10);
-      
-      // Page numbers on right
+      // Page numbers
       doc.text(
         `Page ${i} of ${totalPages}`,
         pageWidth - margin,
@@ -354,10 +281,11 @@ const GovernmentReport = () => {
       );
     }
   
-    // Save with formatted date in filename
+    // Save the document
     const filename = `government_subsidy_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
     doc.save(filename);
   };
+  
   const datePickerConfig = {
     maxDate: new Date(),
     dateFormat: "yyyy-MM-dd",

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Trash2, Edit, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Users, UserPlus, Trash2, Edit, ToggleLeft, ToggleRight, Upload, AlertCircle } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import API from '../api';
 
 const AdminBeneficiaryManagement = () => {
@@ -8,9 +9,12 @@ const AdminBeneficiaryManagement = () => {
     name: '',
     national_id: '',
     phone_number: '',
+    needs: '', // Added needs field
   });
   const [editBeneficiaryId, setEditBeneficiaryId] = useState(null);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetchBeneficiaries();
@@ -32,6 +36,69 @@ const AdminBeneficiaryManagement = () => {
     setBeneficiaryData({ ...beneficiaryData, [name]: value });
   };
 
+  const handleExcelUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, {
+        type: 'array',
+        cellDates: true,
+        cellNF: false,
+        cellText: false
+      });
+
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      // Validate the Excel structure
+      const requiredColumns = ['name', 'national_id', 'phone_number', 'needs'];
+      const headers = Object.keys(jsonData[0] || {}).map(key => key.toLowerCase());
+      
+      const missingColumns = requiredColumns.filter(col => 
+        !headers.includes(col.toLowerCase())
+      );
+
+      if (missingColumns.length > 0) {
+        throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
+      }
+
+      // Process and upload each beneficiary
+      const apiInstance = API.getApiInstance();
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const row of jsonData) {
+        try {
+          await apiInstance.post('/beneficiaries/add', {
+            name: row.name,
+            national_id: row.national_id?.toString(),
+            phone_number: row.phone_number?.toString(),
+            needs: row.needs
+          });
+          successCount++;
+        } catch (err) {
+          errorCount++;
+          console.error('Error adding beneficiary:', row, err);
+        }
+      }
+
+      setSuccess(`Successfully added ${successCount} beneficiaries. ${errorCount > 0 ? `Failed to add ${errorCount} entries.` : ''}`);
+      fetchBeneficiaries();
+    } catch (error) {
+      setError(`Error processing Excel file: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+      e.target.value = null; // Reset file input
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -50,24 +117,25 @@ const AdminBeneficiaryManagement = () => {
         await apiInstance.post('/beneficiaries/add', beneficiaryData);
       }
 
-      setBeneficiaryData({ name: '', national_id: '', phone_number: '' });
+      setBeneficiaryData({ name: '', national_id: '', phone_number: '', needs: '' });
       setEditBeneficiaryId(null);
       fetchBeneficiaries();
+      setSuccess('Beneficiary saved successfully!');
     } catch (error) {
       setError('Error saving beneficiary. Please try again.');
       console.error('Error saving beneficiary:', error);
     }
   };
-
   const handleEdit = (beneficiary) => {
     setBeneficiaryData({
       name: beneficiary.name,
       national_id: beneficiary.national_id,
       phone_number: beneficiary.phone_number,
+      needs: beneficiary.needs, // ✅ Add needs field
     });
     setEditBeneficiaryId(beneficiary.id);
   };
-
+  
   const handleDelete = async (id) => {
     try {
       const apiInstance = API.getApiInstance();
@@ -101,28 +169,54 @@ const AdminBeneficiaryManagement = () => {
     }
   };
 
+
+  // ... (keep existing handle functions: handleEdit, handleDelete, handleActivate, handleDeactivate)
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-#23533E text-white px-6 py-4 flex items-center justify-between">
+        <div className="bg-[#23533E] text-white px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Users className="w-8 h-8" />
             <h1 className="text-2xl font-semibold">Beneficiary Management</h1>
           </div>
+          
+          {/* Excel Upload Section */}
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center space-x-2 bg-white text-[#23533E] px-4 py-2 rounded-lg cursor-pointer hover:bg-opacity-90">
+              <Upload className="w-5 h-5" />
+              <span>Upload Excel</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleExcelUpload}
+                className="hidden"
+                disabled={isUploading}
+              />
+            </label>
+          </div>
         </div>
 
-        {/* Error Handling */}
+        {/* Notifications */}
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-            <p className="font-bold">Error</p>
-            <p>{error}</p>
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-5 h-5" />
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-4">
+            <p>{success}</p>
           </div>
         )}
 
         {/* Form Section */}
         <div className="p-6 bg-gray-100">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Name
@@ -133,7 +227,7 @@ const AdminBeneficiaryManagement = () => {
                 value={beneficiaryData.name}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-#23533E"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#23533E]"
               />
             </div>
 
@@ -148,7 +242,7 @@ const AdminBeneficiaryManagement = () => {
                 onChange={handleInputChange}
                 required
                 maxLength={16}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-#23533E"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#23533E]"
               />
             </div>
 
@@ -161,11 +255,24 @@ const AdminBeneficiaryManagement = () => {
                 name="phone_number"
                 value={beneficiaryData.phone_number}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-#23533E"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#23533E]"
               />
             </div>
 
-            <div className="md:col-span-3 flex justify-end">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Needs
+              </label>
+              <textarea
+                name="needs"
+                value={beneficiaryData.needs}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#23533E]"
+                rows="1"
+              />
+            </div>
+
+            <div className="md:col-span-2 lg:col-span-4 flex justify-end">
               <button 
                 type="submit" 
                 className="px-6 py-2 bg-[#23533E] text-white rounded-md hover:bg-opacity-90 transition-colors flex items-center space-x-2"
@@ -186,6 +293,7 @@ const AdminBeneficiaryManagement = () => {
                   <th className="py-3 px-6 text-left">Name</th>
                   <th className="py-3 px-6 text-left">National ID</th>
                   <th className="py-3 px-6 text-left">Phone Number</th>
+                  <th className="py-3 px-6 text-left">Needs</th>
                   <th className="py-3 px-6 text-center">Status</th>
                   <th className="py-3 px-6 text-center">Actions</th>
                 </tr>
@@ -203,6 +311,9 @@ const AdminBeneficiaryManagement = () => {
                     </td>
                     <td className="py-3 px-6 text-left">
                       {beneficiary.phone_number}
+                    </td>
+                    <td className="py-3 px-6 text-left">
+                      {beneficiary.needs}
                     </td>
                     <td className="py-3 px-6 text-center">
                       <span className={`
