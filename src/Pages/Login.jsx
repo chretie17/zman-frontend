@@ -8,6 +8,8 @@ import {
   LeafIcon 
 } from 'lucide-react';
 import API from '../api';
+import { Link } from 'react-router-dom';
+
 import background from '../assets/ingabo.jpg';
 
 const Login = () => {
@@ -143,48 +145,83 @@ const Login = () => {
               </button>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-400 
-                       text-white py-4 rounded-xl
-                       hover:from-emerald-400 hover:to-emerald-300 
-                       transition duration-300 
-                       transform hover:scale-[1.02] active:scale-[0.98]
-                       disabled:opacity-50 
-                       flex items-center justify-center space-x-2
-                       shadow-lg shadow-emerald-900/50 
-                       hover:shadow-xl hover:shadow-emerald-900/50
-                       font-semibold text-lg"
-            >
-              {isLoading ? (
-                <>
-                  <svg 
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    fill="none" 
-                    viewBox="0 0 24 24"
-                  >
-                    <circle 
-                      className="opacity-25" 
-                      cx="12" 
-                      cy="12" 
-                      r="10" 
-                      stroke="currentColor" 
-                      strokeWidth="4"
-                    ></circle>
-                    <path 
-                      className="opacity-75" 
-                      fill="currentColor" 
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  <span>Signing in...</span>
-                </>
-              ) : (
-                <span>Sign In</span>
-              )}
-            </button>
+       {/* Sign In Button */}
+<button
+  type="submit"
+  disabled={isLoading}
+  className="w-full bg-gradient-to-r from-emerald-500 to-emerald-400
+    text-white py-4 rounded-xl
+    hover:from-emerald-400 hover:to-emerald-300
+    transition duration-300
+    transform hover:scale-[1.02] active:scale-[0.98]
+    disabled:opacity-50
+    flex items-center justify-center space-x-2
+    shadow-lg shadow-emerald-900/50
+    hover:shadow-xl hover:shadow-emerald-900/50
+    font-semibold text-lg
+    mb-4" // Added margin-bottom for spacing
+>
+  {isLoading ? (
+    <>
+      <svg
+        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <span>Signing in...</span>
+    </>
+  ) : (
+    <span>Sign In</span>
+  )}
+</button>
+
+{/* Go Home Button - with spacing */}
+<Link to="/" className="block mt-4"> {/* Added margin-top for spacing */}
+  <button
+    type="button"
+    className="w-full bg-white border-2 border-emerald-500 
+      text-emerald-600 py-4 rounded-xl
+      hover:bg-emerald-50
+      transition duration-300
+      transform hover:scale-[1.02] active:scale-[0.98]
+      disabled:opacity-50
+      flex items-center justify-center space-x-2
+      shadow-md shadow-emerald-900/20
+      hover:shadow-lg hover:shadow-emerald-900/30
+      font-semibold text-lg"
+  >
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      className="h-5 w-5 mr-2" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      stroke="currentColor"
+    >
+      <path 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        strokeWidth={2} 
+        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" 
+      />
+    </svg>
+    <span>Return Home</span>
+  </button>
+</Link>
           </form>
         </div>
       </div>

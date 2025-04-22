@@ -115,9 +115,8 @@ const ManageUsers = () => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1F4B38]"
               required
             >
-              <option value="public">Public</option>
+              <option value="sales">Sales</option>
               <option value="admin">Admin</option>
-              <option value="moderator">Moderator</option>
             </select>
             
             <button

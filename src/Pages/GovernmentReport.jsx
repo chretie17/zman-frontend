@@ -80,15 +80,14 @@ const GovernmentReport = () => {
       });
       
       setError('');
-  
-      console.log('Date range sent to API:', { start, end }); // For debugging
     } catch (err) {
       console.error('Error fetching report:', err);
       setError('Error fetching custom government report.');
     } finally {
       setLoading(false);
     }
-  }; 
+  };
+
   const handlePDFDownload = async () => {
     if (!reportData) return;
   
@@ -162,8 +161,7 @@ const GovernmentReport = () => {
       `This report provides a comprehensive overview of the government subsidy program's performance.`,
       `Total subsidy disbursement amounts to ${Number(reportData.totalSubsidyGiven).toLocaleString()} RWF,`,
       `generating a total subsidized revenue of ${Number(reportData.totalSubsidizedRevenue).toLocaleString()} RWF.`,
-      `The program has served ${reportData.recipients.length} beneficiaries and currently maintains`,
-      `${reportData.subsidizedInventory.length} products in the subsidized inventory.`
+      `The program has served ${reportData.recipients.length} beneficiaries during this period.`
     ].join(' ');
   
     const splitSummary = doc.splitTextToSize(summaryText, contentWidth);
@@ -226,37 +224,6 @@ const GovernmentReport = () => {
       tableWidth: contentWidth,
     });
   
-    // Inventory Section
-    yPos = doc.autoTable.previous.finalY + 20;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(30, 75, 56);
-    doc.text('Subsidized Product Inventory', margin, yPos);
-  
-    yPos += 10;
-    // Inventory table with consistent styling
-    doc.autoTable({
-      startY: yPos,
-      head: [['Product ID', 'Product Name', 'Remaining Stock']],
-      body: reportData.subsidizedInventory.map((item) => [
-        item.productId,
-        item.productName,
-        Number(item.remainingStock).toLocaleString()
-      ]),
-      styles: {
-        font: 'helvetica',
-        fontSize: 9,
-        cellPadding: 5,
-      },
-      headStyles: {
-        fillColor: [240, 240, 240],
-        textColor: [30, 75, 56],
-        fontStyle: 'bold',
-      },
-      margin: { left: margin, right: margin },
-      tableWidth: contentWidth,
-    });
-  
     // Add footer to all pages
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
@@ -292,15 +259,16 @@ const GovernmentReport = () => {
     isClearable: true,
     showTimeSelect: false,
   };
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header with Date Range */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-[#1E4B38]">
           Government Subsidy Report
         </h1>
         {activeDateRange && (
-          <div className="bg-[#1E4B38]/10 px-4 py-2 rounded-lg">
+          <div className="bg-[#1E4B38]/10 px-4 py-2 rounded-lg self-start">
             <span className="text-[#1E4B38] font-medium">
               {format(new Date(activeDateRange.start), 'MMM dd, yyyy')} - {format(new Date(activeDateRange.end), 'MMM dd, yyyy')}
             </span>
@@ -316,33 +284,67 @@ const GovernmentReport = () => {
         <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-6">{error}</div>
       ) : (
         <div className="space-y-8">
-          {/* Overview Cards */}
+          {/* Overview Cards - Enhanced Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-[#1E4B38]/10">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-600">Total Subsidy Given</h3>
+            <div className="bg-white rounded-xl shadow-lg p-8 border border-[#1E4B38]/10">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-medium text-gray-600">Total Subsidy Given</h3>
                 <span className="text-[#1E4B38] bg-[#1E4B38]/10 px-3 py-1 rounded-full text-sm">RWF</span>
               </div>
-              <p className="text-3xl font-bold text-[#1E4B38] mt-2">
+              <p className="text-4xl font-bold text-[#1E4B38] mt-4">
                 {Number(reportData.totalSubsidyGiven).toLocaleString()}
               </p>
             </div>
             
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-[#1E4B38]/10">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-600">Total Subsidized Revenue</h3>
+            <div className="bg-white rounded-xl shadow-lg p-8 border border-[#1E4B38]/10">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xl font-medium text-gray-600">Total Subsidized Revenue</h3>
                 <span className="text-[#1E4B38] bg-[#1E4B38]/10 px-3 py-1 rounded-full text-sm">RWF</span>
               </div>
-              <p className="text-3xl font-bold text-[#1E4B38] mt-2">
+              <p className="text-4xl font-bold text-[#1E4B38] mt-4">
                 {Number(reportData.totalSubsidizedRevenue).toLocaleString()}
               </p>
             </div>
           </div>
 
-          {/* Beneficiaries Table */}
+          {/* Statistics Overview Card */}
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-[#1E4B38]/10">
+            <div className="p-2">
+              <h2 className="text-xl font-semibold text-[#1E4B38] mb-4">Program Statistics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="bg-[#1E4B38]/10 p-3 rounded-full">
+                    <Filter className="h-6 w-6 text-[#1E4B38]" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-sm">Total Beneficiaries</p>
+                    <p className="text-xl font-semibold text-[#1E4B38]">
+                      {reportData.recipients.length}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="bg-[#1E4B38]/10 p-3 rounded-full">
+                    <Calendar className="h-6 w-6 text-[#1E4B38]" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-sm">Latest Transaction</p>
+                    <p className="text-xl font-semibold text-[#1E4B38]">
+                      {reportData.recipients.length > 0 
+                        ? format(new Date(Math.max(...reportData.recipients.map(r => new Date(r.transactionDate)))), 'MMM dd, yyyy') 
+                        : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Beneficiaries Table - Enhanced Design */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#1E4B38]/10">
-            <div className="p-6">
+            <div className="p-6 border-b border-gray-100">
               <h2 className="text-xl font-semibold text-[#1E4B38]">Beneficiaries</h2>
+              <p className="text-gray-500 mt-1">Detailed list of all subsidy beneficiaries</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -396,69 +398,35 @@ const GovernmentReport = () => {
             </div>
           </div>
 
-          {/* Inventory Table */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#1E4B38]/10">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-[#1E4B38]">Subsidized Product Inventory</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-[#1E4B38]">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Product ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Product Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                      Remaining Stock
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {reportData.subsidizedInventory.map((product, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {product.productId}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {product.productName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {Number(product.remainingStock).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Actions Section */}
+          {/* Actions Section - Enhanced UI */}
           <div className="flex flex-col md:flex-row md:justify-between gap-6 bg-white rounded-xl shadow-lg p-6 border border-[#1E4B38]/10">
             {/* Date Range Selector */}
             <div className="flex flex-wrap items-center gap-4">
-            <div className="relative">
-  <DatePicker
-    {...datePickerConfig}
-    selected={startDate}
-    onChange={(date) => setStartDate(date)}
-    placeholderText="Start Date"
-    selectsStart
-    startDate={startDate}
-    endDate={endDate}
-    className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E4B38] w-40"
-  />
-  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-</div>
+              <div className="relative">
+                <DatePicker
+                  {...datePickerConfig}
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  placeholderText="Start Date"
+                  selectsStart
+                  startDate={startDate}
+                  endDate={endDate}
+                  className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E4B38] w-40"
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              </div>
               <span className="text-gray-500">to</span>
               
               <div className="relative">
                 <DatePicker
+                  {...datePickerConfig}
                   selected={endDate}
                   onChange={(date) => setEndDate(date)}
                   placeholderText="End Date"
+                  selectsEnd
+                  startDate={startDate}
+                  endDate={endDate}
+                  minDate={startDate}
                   className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E4B38] w-40"
                 />
                 <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
